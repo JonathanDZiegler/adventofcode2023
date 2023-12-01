@@ -6,6 +6,9 @@ def read_input_from_file(file_path) -> str:
 def input_lines(puzzle_input: str):
     return puzzle_input.split("\n")
 
+def load(path:str):
+    return input_lines(read_input_from_file(path))
+
 def load_str(path:str):
     lines = input_lines(read_input_from_file(path))
     return [l.split(',') for l in lines]

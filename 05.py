@@ -38,13 +38,36 @@ def step(ids, single_map):
     return ids
 
 
-def vector_step(idx:int, single_map)->int:
-    for map in single_map:
-        if map[1] <= idx <= map[1] + map[2]:
-            offset = idx - map[1]
-            idx = map[0] + offset
-            break
-    return idx
+def calc_overlap(a: range, b: range):
+    return range(max(a[0], b[0]), min(a[-1], b[-1]) + 1)
+
+
+def range_step(range_list: list[range], map_list) -> list[list[range]]:
+    results = []
+    while range_list:
+        elem = range_list.pop(0)
+        for single_map in map_list:
+            target, source, length = single_map
+            map_range = range(source, source + length)
+            overlap = calc_overlap(elem, map_range)
+            # map overlap of ranges to target values and add to list of output ranges
+            if len(overlap) > 0:
+                results.append(
+                    range(
+                        target + overlap.start - source, target + overlap.stop - source
+                    )
+                )
+                # check for underflow of range
+                if elem.start < overlap.start:
+                    range_list.append(range(elem.start, min(elem.stop, overlap.start)))
+                # check for overflow of range
+                elif overlap.stop < elem.stop:
+                    range_list.append(range(max(overlap.stop, elem.start), elem.stop))
+                break
+        else:
+            results.append(elem)
+
+    return results
 
 
 def solve(part: int = 1):
@@ -52,20 +75,21 @@ def solve(part: int = 1):
     data = load(data_path)
     seeds, seed_map, map_order = preprocess(data)
     if part == 2:
-        seeds = np.hstack(
-            [
-                np.arange(start, start + length)
-                for start, length in zip(seeds[::2], seeds[1::2])
-            ]
-        )
-    curr_ids = seeds
-    for name in tqdm(map_order):
-        # transform = np.vectorize(vector_step, excluded=["single_map"])
-        transform= partial(vector_step, single_map=seed_map[name])
-        curr_ids = transform(curr_ids)
-    print(min(curr_ids))
+        curr_ranges = [
+            range(start, start + length)
+            for start, length in zip(seeds[::2], seeds[1::2])
+        ]
+        for name in map_order:
+            curr_ranges = range_step(curr_ranges, seed_map[name])
+
+        print(min([e.start for e in curr_ranges]))
+    else:
+        curr_ids = seeds
+        for name in map_order:
+            curr_ids = step(curr_ids, seed_map[name])
+        print(min(curr_ids))
 
 
 if __name__ == "__main__":
-    # solve(1)
+    solve(1)
     solve(2)

@@ -1,9 +1,7 @@
-from helpers import load
 import os
-import numpy as np
-from functools import partial
-from joblib import Parallel, delayed
-from tqdm import tqdm
+import time
+
+from helpers import load
 
 
 def preprocess(data: list):
@@ -91,5 +89,10 @@ def solve(part: int = 1):
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     solve(1)
+    intermediate = time.perf_counter()
     solve(2)
+    stop = time.perf_counter()
+    print(f"Part 1 compute time: {1000*(intermediate-start):0.2f} milliseconds")
+    print(f"Part 2 compute time: {1000*(stop-intermediate):0.2f} milliseconds")

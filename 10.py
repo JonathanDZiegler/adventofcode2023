@@ -62,7 +62,7 @@ def solve(data, part: int):
                     (tile, current + 1)
                     for tile in next_tiles
                     if connected.get(tile, -1) < 0
-                    or connected.get(tile, 0) > current + 1
+                    or connected.get(tile, -1) > current
                 )
 
     starting_pos = tuple([a[0] for a in np.nonzero(data.find("S") == 0)])

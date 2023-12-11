@@ -21,31 +21,6 @@ def print_map(data):
     )
 
 
-def expand(data: np.array):
-    c = 0
-    for col in data.T:
-        if not any(col):
-            data = np.insert(data, c, values=False, axis=1)
-            c += 1
-        c += 1
-    r = 0
-    for row in data:
-        if not any(row):
-            data = np.insert(data, r, values=False, axis=0)
-            r += 1
-        r += 1
-    return data
-
-
-def calc_distances(data: np.array):
-    points = np.argwhere(data)
-    distances = []
-    for i in range(len(points)):
-        for j in range(i + 1, len(points)):
-            distances.append(int(np.linalg.norm(points[j] - points[i], ord=1)))
-    return distances
-
-
 def warp_space(starmap, warp_factor):
     spacemap = np.ones_like(starmap, dtype=int)
     for i in range(starmap.shape[0]):
@@ -61,8 +36,6 @@ def traverse_warped_space(points, spacemap):
     distances = []
     for i in range(len(points)):
         for j in range(i + 1, len(points)):
-            # y = (min(points[i][0], points[j][0]), max(points[i][0], points[j][0])+1)
-            # x = (min(points[i][1], points[j][1]), max(points[i][1], points[j][1])+1)
             y_dist = np.sum(
                 spacemap[
                     min(points[i][0], points[j][0]) : max(points[i][0], points[j][0]),

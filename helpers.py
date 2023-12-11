@@ -9,13 +9,16 @@ def input_lines(puzzle_input: str):
 def load(path:str):
     return input_lines(read_input_from_file(path))
 
-def load_str(path:str):
+def load_str(path:str, delim:str=None):
     lines = input_lines(read_input_from_file(path))
-    return [l.split(',') for l in lines]
+    if delim is None or len(delim)==0:
+        return [list(l) for l in lines]
+    else:
+        return [l.split(delim) for l in lines]
     # return lines
 
-def load_int(path:str):
+def load_int(path:str, delim:str=" "):
     lines = input_lines(read_input_from_file(path))
-    chars = [l.split() for l in lines]
+    chars = [l.split(delim) for l in lines]
     return [[int(c) for c in l] for l in chars]
     # return lines

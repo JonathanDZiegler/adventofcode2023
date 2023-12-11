@@ -3,6 +3,7 @@ import os
 import time
 import numpy as np
 from collections import deque
+import matplotlib.pyplot as plt
 
 connections = {
     "S": [(1, 0), (-1, 0), (0, 1), (0, -1)],  # Starting point
@@ -51,27 +52,36 @@ def solve(data, part: int):
             next_tiles = [
                 addpos(pos, instruction) for instruction in connections[data[pos]]
             ]
-            connected[pos] = min(connected.get(pos, np.infty), current + 1)
-            [
-                queue.append((tile, current + 1))
-                for tile in next_tiles
-                if (connected.get(tile, -1) < 0 or connected.get(tile, 0) > current)
-            ]
-        return 0
+
+            # Update the connected dictionary with the minimum distance
+            if connected.get(pos, np.inf) > current:
+                connected[pos] = current + 1
+
+                # Add next tiles to the queue if they haven't been visited or have a greater distance
+                queue.extend(
+                    (tile, current + 1)
+                    for tile in next_tiles
+                    if connected.get(tile, -1) < 0
+                    or connected.get(tile, 0) > current + 1
+                )
 
     starting_pos = tuple([a[0] for a in np.nonzero(data.find("S") == 0)])
     connected = {starting_pos: 0}
-    
-    for tile in [addpos(starting_pos, instruction) for instruction in connections["S"]]:
-        step(tile, 0)
-    
-#     res = np.zeros(data.shape, dtype=int)
-#     for k, v in connected.items():
-#         res[k] = v
-#         # print(res)
-# # res = np.max(res) - 1
 
+    # Explore the loop starting from the S tile
+    for tile in (addpos(starting_pos, instruction) for instruction in connections["S"]):
+        step(tile, 0)
+
+        
+    res = np.full(data.shape, -10, dtype=int)
+    for k, v in connected.items():
+        res[k] = v
+    plt.imshow(res, aspect="auto")
+    plt.savefig('res.pdf')
+    plt.colorbar()
     print(f"Furthest distance is {max(connected.values())}.")
+
+
 
 if __name__ == "__main__":
     data = load()
@@ -81,6 +91,3 @@ if __name__ == "__main__":
     print(
         f"Computation time for part 1: {1000*(intermediate-start):0.3f} milliseconds."
     )
-    # solve(2)
-    stop = time.perf_counter()
-    print(f"Computation time for part 2: {1000*(stop-intermediate):0.3f} milliseconds.")

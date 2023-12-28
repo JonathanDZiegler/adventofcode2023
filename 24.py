@@ -3,6 +3,7 @@ import time
 from itertools import combinations
 
 import numpy as np
+from sympy import solve, symbols
 
 from helpers import load
 
@@ -14,7 +15,9 @@ def extract_line(line: str, dims: int = 2) -> np.array:
     return x, dx
 
 
-def intersect(f: tuple[np.array], g: tuple[np.array], area: tuple[int], dims: int = 2):
+def intersect(
+    f: tuple[np.array], g: tuple[np.array], area: tuple[int], dims: int = 2
+) -> bool:
     a = [[p, -q] for p, q in zip(f[1], g[1])]
     b = [q - p for p, q in zip(f[0], g[0])]
     try:
@@ -30,10 +33,36 @@ def intersect(f: tuple[np.array], g: tuple[np.array], area: tuple[int], dims: in
     )
 
 
-def solve(part: int):
-    data_path = f"data_d_{os.path.basename(__file__)[:-2]}csv"
-    data = load(data_path)
-    points = [extract_line(line) for line in data]
+def sym_3(c: str):
+    return symbols(" ".join(f"{c}{i}" for i in range(3)))
+
+
+def throw(trajectories: tuple[tuple[np.array]]) -> np.array:
+    a = [elem[1] for elem in trajectories[:4]]
+    b = [elem[0] for elem in trajectories[:4]]
+    c, d = [sym_3(c) for c in ["c", "d"]]
+    eqs = []
+    t = symbols(" ".join(f"t{i}" for i in range(len(a))))
+    for i in range(len(a)):
+        eqs.extend(
+            [a * t[i] + b - c * t[i] - d for a, b, c, d in zip(a[i], b[i], c, d)]
+        )
+
+    res = solve(
+        eqs,
+        list(c) + list(d) + list(t),
+        dict=True,
+    )[0]
+
+    nums = list(res.values())
+    c = np.array(nums[:3], dtype=int)
+    d = np.array(nums[3:6], dtype=int)
+    t = np.array(nums[6:], dtype=int)
+
+    return d.sum()
+
+
+def solve_1(points):
     res = [
         intersect(*points, area=(200000000000000, 400000000000000), dims=2)
         for points in combinations(points, 2)
@@ -41,13 +70,20 @@ def solve(part: int):
     print(f"Result part 1: {sum(res)}")
 
 
+def solve_2(points):
+    res = throw(points)
+    print(f"Result part 2: {res}")
+
+
 if __name__ == "__main__":
+    data_path = f"data_d_{os.path.basename(__file__)[:-2]}csv"
+    data = load(data_path)
     start = time.perf_counter()
-    solve(1)
+    solve_1([extract_line(line, dims=2) for line in data])
     intermediate = time.perf_counter()
     print(
         f"Computation time for part 1: {1000*(intermediate-start):0.3f} milliseconds."
     )
-    # solve(2)
+    solve_2([extract_line(line, dims=3) for line in data])
     stop = time.perf_counter()
     print(f"Computation time for part 2: {1000*(stop-intermediate):0.3f} milliseconds.")
